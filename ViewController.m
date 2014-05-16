@@ -20,9 +20,13 @@
 @property (strong, nonatomic) IBOutlet UILabel *myLabelNine;
 @property (strong, nonatomic) IBOutlet UILabel *whichPlayerLabel;
 @property (strong, nonatomic) IBOutlet UILabel *timerLabel;
+@property (strong, nonatomic) IBOutlet UIButton *multiPlayerButton;
 @property NSArray *subviews;
 @property NSTimer *timer;
 @property int seconds;
+@property BOOL computerPlayer;
+@property NSString *singlePlayerLabelText;
+@property NSString *multiPlayerLabelText;
 
 @end
 
@@ -33,7 +37,29 @@
     [super viewDidLoad];
     self.subviews = self.view.subviews;
     self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(timerFired) userInfo:nil repeats:YES];
+    self.singlePlayerLabelText = @"Single Player";
+    self.multiPlayerLabelText = @"Multi-Player";
+    [self.multiPlayerButton setTitle:self.singlePlayerLabelText forState:UIControlStateNormal];
+    self.computerPlayer = YES;
     [self restartGame];
+}
+
+- (IBAction)onMultiPlayerButtonPressed:(UIButton *)button
+{
+    if([button.titleLabel.text isEqualToString:self.multiPlayerLabelText])
+    {
+        // play against the computer
+        [self.multiPlayerButton setTitle:self.singlePlayerLabelText forState:UIControlStateNormal];
+        self.computerPlayer = YES;
+        if([self.whichPlayerLabel.text isEqualToString: @"O"])
+            [self makePlay:[self pickRandomEmptyCell]];
+    }
+    else
+    {
+        // play against another human
+        [self.multiPlayerButton setTitle:self.multiPlayerLabelText forState:UIControlStateNormal];
+        self.computerPlayer = NO;
+    }
 }
 
 - (void)restartGame
@@ -61,6 +87,8 @@
     {
         self.whichPlayerLabel.text = @"O";
         self.whichPlayerLabel.textColor = [UIColor redColor];
+        if([self computerPlayer])
+            [self makePlay:[self pickRandomEmptyCell]];
     }
     else
     {
@@ -79,39 +107,39 @@
     UILabel *selectedLabel = [self findLabelUsingPoint:point];
     if(selectedLabel && [selectedLabel.text isEqual: @""])
     {
-        selectedLabel.text = self.whichPlayerLabel.text;
-        selectedLabel.textColor = self.whichPlayerLabel.textColor;
-
-        // check if there is a winner
-        if(self.whoWon.length > 0)
-        {
-            self.whichPlayerLabel.text = @"";
-            UIAlertView *winner = [[UIAlertView alloc] init];
-            if(self.whoWon.length == 1)
-                winner.title = [NSString stringWithFormat:@"%@ is the winner!",[self whoWon]];
-            else
-                winner.title = @"Cat's Game (draw)";
-            [winner addButtonWithTitle:@"New Game"];
-            [winner addButtonWithTitle:@"Quit"];
-            winner.delegate = self;
-            [winner show];
-        }
-        [self nextTurn];
+        [self makePlay:selectedLabel];
     }
+}
+
+- (void)makePlay:(UILabel *)cell
+{
+    cell.text = self.whichPlayerLabel.text;
+    cell.textColor = self.whichPlayerLabel.textColor;
+
+    // check if there is a winner
+    if(self.whoWon.length > 0)
+    {
+        self.whichPlayerLabel.text = @"";
+        UIAlertView *winner = [[UIAlertView alloc] init];
+        if(self.whoWon.length == 1)
+            winner.title = [NSString stringWithFormat:@"%@ is the winner!",[self whoWon]];
+        else
+            winner.title = @"Cat's Game (draw)";
+        [winner addButtonWithTitle:@"New Game"];
+        [winner addButtonWithTitle:@"Quit"];
+        winner.delegate = self;
+        [winner show];
+    }
+    [self nextTurn];
 }
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
     if(buttonIndex == 0)
-    {
         [self restartGame];
-    }
     else
-    {
         exit(0);
-    }
 }
-
 
 - (UILabel *) findLabelUsingPoint:(CGPoint)point
 {
@@ -174,6 +202,21 @@
     return([[self.subviews[a] text] length] > 0 &&
            [[self.subviews[a] text] isEqualToString:[self.subviews[b] text] ] &&
            [[self.subviews[a] text] isEqualToString:[self.subviews[c] text] ]);
+}
+
+- (UILabel *)pickRandomEmptyCell
+{
+    // pick the middle one, if available
+    if([[self.subviews[4] text] length] == 0)
+        return [self.subviews objectAtIndex:4];
+    NSMutableArray *emptyCellList = [NSMutableArray array];
+    for(int i = 0; i < 9; i++)
+    {
+        if([[self.subviews[i] text] length] == 0)
+            [emptyCellList addObject:self.subviews[i]];
+    }
+    int index = arc4random_uniform([emptyCellList count]);
+    return [emptyCellList objectAtIndex:index];
 }
 
 @end
