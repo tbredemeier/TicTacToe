@@ -20,6 +20,7 @@
 @property (strong, nonatomic) IBOutlet UILabel *myLabelNine;
 @property (strong, nonatomic) IBOutlet UILabel *whichPlayerLabel;
 @property (strong, nonatomic) IBOutlet UILabel *timerLabel;
+@property NSArray *subviews;
 @property NSTimer *timer;
 @property int seconds;
 
@@ -30,22 +31,18 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    self.subviews = self.view.subviews;
     self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(timerFired) userInfo:nil repeats:YES];
     [self restartGame];
 }
 
 - (void)restartGame
 {
-    // reset the board
-    self.myLabelOne.text   = @"";
-    self.myLabelTwo.text   = @"";
-    self.myLabelThree.text = @"";
-    self.myLabelFour.text  = @"";
-    self.myLabelFive.text  = @"";
-    self.myLabelSix.text   = @"";
-    self.myLabelSeven.text = @"";
-    self.myLabelEight.text = @"";
-    self.myLabelNine.text  = @"";
+    for(int i = 0; i < 9; i++)
+    {
+        UILabel *test = self.subviews[i];
+        test.text = @"";
+    }
 
     [self nextTurn];
 }
@@ -118,92 +115,65 @@
 
 - (UILabel *) findLabelUsingPoint:(CGPoint)point
 {
-    if(CGRectContainsPoint(self.myLabelOne.frame, point))
-        return self.myLabelOne;
-    if(CGRectContainsPoint(self.myLabelTwo.frame, point))
-        return self.myLabelTwo;
-    if(CGRectContainsPoint(self.myLabelThree.frame, point))
-        return self.myLabelThree;
-    if(CGRectContainsPoint(self.myLabelFour.frame, point))
-        return self.myLabelFour;
-    if(CGRectContainsPoint(self.myLabelFive.frame, point))
-        return self.myLabelFive;
-    if(CGRectContainsPoint(self.myLabelSix.frame, point))
-        return self.myLabelSix;
-    if(CGRectContainsPoint(self.myLabelSeven.frame, point))
-        return self.myLabelSeven;
-    if(CGRectContainsPoint(self.myLabelEight.frame, point))
-        return self.myLabelEight;
-    if(CGRectContainsPoint(self.myLabelNine.frame, point))
-        return self.myLabelNine;
+    for(int i = 0; i < 9; i++)
+    {
+        UILabel *cell = self.subviews[i];
+        if(CGRectContainsPoint(cell.frame, point))
+            return cell;
+    }
     return nil;
 }
 
 - (NSString *)whoWon
 {
-    NSString *labelValue;
+    // check top row
+    if([self isWinningCombination:0 :1 :2])
+        return [self.subviews[0] text];
 
-    // get upper left corner value
-    labelValue = self.myLabelOne.text;
-    // test first column
-    if([self.myLabelFour.text isEqualToString:labelValue] &&
-       [self.myLabelSeven.text isEqualToString: labelValue])
-        return labelValue;
-    // test first row
-    if([self.myLabelTwo.text isEqualToString:labelValue] &&
-       [self.myLabelThree.text isEqualToString: labelValue])
-        return labelValue;
-    // test diagonal
-    if([self.myLabelFive.text isEqualToString:labelValue] &&
-       [self.myLabelNine.text isEqualToString:labelValue])
-        return labelValue;
+    // check middle row
+    if([self isWinningCombination:3 :4 :5])
+        return [self.subviews[3] text];
 
-    // get middle left value
-    labelValue = self.myLabelFour.text;
-    // test middle row
-    if([self.myLabelFive.text isEqualToString:labelValue] &&
-       [self.myLabelSix.text isEqualToString: labelValue])
-        return labelValue;
+    // check bottom row
+    if([self isWinningCombination:6 :7 :8])
+        return [self.subviews[6] text];
 
-    // get middle top value
-    labelValue = self.myLabelTwo.text;
-    // test middle row
-    if([self.myLabelFive.text isEqualToString:labelValue] &&
-       [self.myLabelEight.text isEqualToString: labelValue])
-        return labelValue;
+    // check first column
+    if([self isWinningCombination:0 :3 :6])
+        return [self.subviews[0] text];
 
-    // get upper right value
-    labelValue = self.myLabelThree.text;
-    // test diagonal
-    if([self.myLabelFive.text isEqualToString:labelValue] &&
-       [self.myLabelSeven.text isEqualToString: labelValue])
-        return labelValue;
+    // check middle column
+    if([self isWinningCombination:1 :4 :7])
+        return [self.subviews[1] text];
 
-    // get bottom right corner value
-    labelValue = self.myLabelNine.text;
-    // test last column
-    if([self.myLabelThree.text isEqualToString:labelValue] &&
-       [self.myLabelSix.text isEqualToString: labelValue])
-        return labelValue;
-    // test bottom row
-    if([self.myLabelSeven.text isEqualToString:labelValue] &&
-       [self.myLabelEight.text isEqualToString: labelValue])
-        return labelValue;
+    // check last column
+    if([self isWinningCombination:2 :5 :8])
+        return [self.subviews[2] text];
 
-    // test if draw (no solution)
-    if(self.myLabelOne.text.length   > 0 &&
-       self.myLabelTwo.text.length   > 0 &&
-       self.myLabelThree.text.length > 0 &&
-       self.myLabelFour.text.length  > 0 &&
-       self.myLabelFive.text.length  > 0 &&
-       self.myLabelSix.text.length   > 0 &&
-       self.myLabelSeven.text.length > 0 &&
-       self.myLabelEight.text.length > 0 &&
-       self.myLabelNine.text.length  > 0)
-        return @"draw";
+    // check first diagonal
+    if([self isWinningCombination:0 :4 :8])
+        return [self.subviews[0] text];
 
-    return @"";
+    // check second diagonal
+    if([self isWinningCombination:2 :4 :6])
+        return [self.subviews[2] text];
+
+    // if any open cells, then game is not over
+    for(int i = 0; i < 9; i++)
+    {
+        if([[self.subviews[i] text] length] == 0)
+            return @"";
+    }
+
+    // no winner and no empty cells; must be a draw
+    return @"draw";
 }
 
+- (BOOL)isWinningCombination:(int)a :(int)b :(int)c
+{
+    return([[self.subviews[a] text] length] > 0 &&
+           [[self.subviews[a] text] isEqualToString:[self.subviews[b] text] ] &&
+           [[self.subviews[a] text] isEqualToString:[self.subviews[c] text] ]);
+}
 
 @end
