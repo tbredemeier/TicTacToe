@@ -19,6 +19,9 @@
 @property (strong, nonatomic) IBOutlet UILabel *myLabelEight;
 @property (strong, nonatomic) IBOutlet UILabel *myLabelNine;
 @property (strong, nonatomic) IBOutlet UILabel *whichPlayerLabel;
+@property (strong, nonatomic) IBOutlet UILabel *timerLabel;
+@property NSTimer *timer;
+@property int seconds;
 
 @end
 
@@ -27,34 +30,47 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(timerFired) userInfo:nil repeats:YES];
     [self restartGame];
 }
 
 - (void)restartGame
 {
     // reset the board
-    self.myLabelOne.text = @"";
-    self.myLabelTwo.text = @"";
+    self.myLabelOne.text   = @"";
+    self.myLabelTwo.text   = @"";
     self.myLabelThree.text = @"";
-    self.myLabelFour.text = @"";
-    self.myLabelFive.text = @"";
-    self.myLabelSix.text = @"";
+    self.myLabelFour.text  = @"";
+    self.myLabelFive.text  = @"";
+    self.myLabelSix.text   = @"";
     self.myLabelSeven.text = @"";
     self.myLabelEight.text = @"";
-    self.myLabelNine.text = @"";
+    self.myLabelNine.text  = @"";
 
-    // pick a random player to start
-//    if(arc4random_uniform(2) == 0)
-    if(YES)
-    {
-        self.whichPlayerLabel.text = @"X";
-        self.whichPlayerLabel.textColor = [UIColor blueColor];
-    }
+    [self nextTurn];
+}
+
+-(void)timerFired
+{
+    if(self.seconds >= 0)
+        self.timerLabel.text = [NSString stringWithFormat:@"%d",self.seconds--];
     else
+        [self nextTurn];
+}
+
+- (void)nextTurn
+{
+    if([self.whichPlayerLabel.text isEqualToString: @"X"])
     {
         self.whichPlayerLabel.text = @"O";
         self.whichPlayerLabel.textColor = [UIColor redColor];
     }
+    else
+    {
+        self.whichPlayerLabel.text = @"X";
+        self.whichPlayerLabel.textColor = [UIColor blueColor];
+    }
+    self.seconds = 10;
 }
 
 - (IBAction)onLabelTapped:(UITapGestureRecognizer *) tapGestureRecognizer
@@ -68,17 +84,6 @@
     {
         selectedLabel.text = self.whichPlayerLabel.text;
         selectedLabel.textColor = self.whichPlayerLabel.textColor;
-
-        if([self.whichPlayerLabel.text isEqualToString: @"X"])
-        {
-            self.whichPlayerLabel.text = @"O";
-            self.whichPlayerLabel.textColor = [UIColor redColor];
-        }
-        else
-        {
-            self.whichPlayerLabel.text = @"X";
-            self.whichPlayerLabel.textColor = [UIColor blueColor];
-        }
 
         // check if there is a winner
         if(self.whoWon.length > 0)
@@ -94,6 +99,7 @@
             winner.delegate = self;
             [winner show];
         }
+        [self nextTurn];
     }
 }
 
