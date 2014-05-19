@@ -27,6 +27,7 @@
 @property BOOL computerPlayer;
 @property NSString *singlePlayerLabelText;
 @property NSString *multiPlayerLabelText;
+@property CGAffineTransform transform;
 
 @end
 
@@ -35,14 +36,38 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    self.transform = self.whichPlayerLabel.transform;
     self.subviews = self.view.subviews;
     self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(timerFired) userInfo:nil repeats:YES];
-    self.singlePlayerLabelText = @"Single Player";
-    self.multiPlayerLabelText = @"Multi-Player";
+    self.singlePlayerLabelText = @"1 Player";
+    self.multiPlayerLabelText = @"2 Player";
     [self.multiPlayerButton setTitle:self.singlePlayerLabelText forState:UIControlStateNormal];
     self.computerPlayer = YES;
     [self restartGame];
 }
+//- (IBAction)onDrag:(UIPanGestureRecognizer *) panGestureRecognizer
+//{
+//    if(panGestureRecognizer.state == UIGestureRecognizerStateEnded)
+//    {
+//        [UIView animateWithDuration:1.0 animations: ^
+//         {self.whichPlayerLabel.transform = self.transform;}];
+//    }
+//    else
+//    {
+//        CGPoint point;
+//
+//        point = [panGestureRecognizer translationInView:self.view];
+//        self.whichPlayerLabel.transform = CGAffineTransformMakeTranslation(point.x, point.y);
+//        point.x += self.whichPlayerLabel.center.x;
+//        point.y += self.whichPlayerLabel.center.y;
+//
+//        UILabel *selectedLabel = [self findLabelUsingPoint:point];
+//        if(selectedLabel && [selectedLabel.text isEqual: @""])
+//        {
+//            [self makePlay:selectedLabel];
+//        }
+//    }
+//}
 
 - (IBAction)onMultiPlayerButtonPressed:(UIButton *)button
 {
@@ -62,12 +87,21 @@
     }
 }
 
+- (IBAction)onHelpButtonPressed:(id)sender
+{
+}
+
+- (IBAction)onQuitButtonPressed:(id)sender
+{
+    exit(0);
+}
+
+
 - (void)restartGame
 {
     for(int i = 0; i < 9; i++)
     {
-        UILabel *test = self.subviews[i];
-        test.text = @"";
+        ((UILabel*)self.subviews[i]).text = @"";
     }
 
     [self nextTurn];
@@ -209,6 +243,7 @@
     // pick the middle one, if available
     if([[self.subviews[4] text] length] == 0)
         return [self.subviews objectAtIndex:4];
+    // otherwise pick a random empty cell
     NSMutableArray *emptyCellList = [NSMutableArray array];
     for(int i = 0; i < 9; i++)
     {
